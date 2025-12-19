@@ -15,6 +15,8 @@ const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const customerRoutes = require('./routes/customer');
+const productRoutes = require('./routes/product');
+const categoryRoutes = require('./routes/category');
 
 // Connect to database
 connectDB();
@@ -47,6 +49,8 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/customer', customerRoutes);
+app.use('/api/customer/products', productRoutes);
+app.use('/api/customer/categories', categoryRoutes);
 
 // Root route
 app.get('/', (req, res) => {

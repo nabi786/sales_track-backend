@@ -78,10 +78,10 @@ const getAllCategories = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Get product counts for each category
+    // Get product counts for each category (only non-deleted products)
     const categoriesWithCounts = await Promise.all(
       categories.map(async (category) => {
-        const productCount = await Product.countDocuments({ category_id: category._id });
+        const productCount = await Product.countDocuments({ category_id: category._id, is_deleted: false });
         const categoryData = category.toObject();
         categoryData.product_count = productCount;
         return categoryData;
@@ -113,8 +113,8 @@ const getCategoryById = async (req, res) => {
       return res.status(404).json({ message: 'Category not found' });
     }
 
-    // Get products for this category
-    const products = await Product.find({ category_id: category._id })
+    // Get products for this category (only non-deleted products)
+    const products = await Product.find({ category_id: category._id, is_deleted: false })
       .populate('shop_id', 'shop_name');
     
     const categoryData = category.toObject();

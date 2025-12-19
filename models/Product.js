@@ -36,6 +36,10 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: false
+  },
+  is_deleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
@@ -46,6 +50,8 @@ productSchema.index({ shop_id: 1 });
 productSchema.index({ customer_id: 1 });
 productSchema.index({ shop_id: 1, customer_id: 1 });
 productSchema.index({ category_id: 1 });
+productSchema.index({ is_deleted: 1 });
+productSchema.index({ customer_id: 1, is_deleted: 1 });
 
 module.exports = mongoose.model('Product', productSchema);
 
