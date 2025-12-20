@@ -9,7 +9,9 @@ const {
   getMyShops,
   getShopById,
   updateShop,
-  deleteShop
+  deleteShop,
+  getMyShop,
+  updateMyShop
 } = require('../controllers/customerController');
 
 // All routes require authentication and customer role
@@ -20,7 +22,16 @@ router.use(isCustomer);
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 
-// Shop routes - multer must be before any body parsing
+// Shop routes (singular - for logged-in user's shop)
+router.get('/shop', getMyShop);
+router.put('/shop', (req, res, next) => {
+  uploadShopLogo(req, res, (err) => {
+    if (err) return handleMulterError(err, req, res, next);
+    next();
+  });
+}, updateMyShop);
+
+// Shop routes (plural - for multiple shops management)
 router.post('/shops', (req, res, next) => {
   uploadShopLogo(req, res, (err) => {
     if (err) return handleMulterError(err, req, res, next);

@@ -455,6 +455,75 @@ const deleteProductImage = async (req, res) => {
   }
 };
 
+// Get all products (public API) with pagination and filters
+const getProducts = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, category, name } = req.query;
+    
+    // Build query - only get non-deleted products
+    const query = { is_deleted: false };
+    
+    // Filter by category if provided
+    if (category) {
+      query.category_id = category;
+    }
+    
+    // Filter by product name if provided (case-insensitive search)
+    if (name && name.trim()) {
+      query.name = { $regex: name.trim(), $options: 'i' };
+    }
+    
+    // Parse pagination parameters
+    const pageNumber = parseInt(page, 10) || 1;
+    const limitNumber = parseInt(limit, 10) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+    
+    // Get total count for pagination metadata
+    const totalProducts = await Product.countDocuments(query);
+    
+    // Get paginated products
+    const products = await Product.find(query)
+      .select('name sale_price _id category_id')
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .skip(skip)
+      .limit(limitNumber);
+    
+    // Get first image for each product
+    const productsWithFirstImage = await Promise.all(
+      products.map(async (product) => {
+        const firstImage = await ProductImage.findOne({ product_id: product._id })
+          .sort({ image_order: 1 });
+        
+        return {
+          id: product._id,
+          name: product.name,
+          price: product.sale_price,
+          image: firstImage ? firstImage.image_url : null
+        };
+      })
+    );
+    
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalProducts / limitNumber);
+    const hasNextPage = pageNumber < totalPages;
+    const hasPrevPage = pageNumber > 1;
+    
+    res.json({
+      products: productsWithFirstImage,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages,
+        totalProducts,
+        limit: limitNumber,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createProduct,
   getMyProducts,
@@ -462,6 +531,7 @@ module.exports = {
   updateProduct,
   deleteProduct,
   addProductImages,
-  deleteProductImage
+  deleteProductImage,
+  getProducts
 };
 

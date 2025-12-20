@@ -100,21 +100,12 @@ const adminLogin = async (req, res) => {
 // Get profile (for both admin and customer)
 const getProfile = async (req, res) => {
   try {
-    const user = await Customer.findById(req.user._id).select('-password');
+    const user = await Customer.findById(req.user._id).select('-password -status');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // For customers, include their shop (only one allowed)
-    let shop = null;
-    if (user.role === 'customer') {
-      shop = await Shop.findOne({ customer_id: user._id });
-    }
-
-    res.json({
-      ...user.toObject(),
-      shop
-    });
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
